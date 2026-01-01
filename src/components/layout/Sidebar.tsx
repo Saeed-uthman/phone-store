@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Smartphone,
+  History,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, adminOnly: false },
   { name: 'Products', href: '/products', icon: Package, adminOnly: false },
   { name: 'Sales / POS', href: '/sales', icon: ShoppingCart, adminOnly: false },
+  { name: 'Sales History', href: '/sales-history', icon: History, adminOnly: false },
   { name: 'Suppliers', href: '/suppliers', icon: Users, adminOnly: true },
   { name: 'Stock Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: true },
   { name: 'Reports', href: '/reports', icon: BarChart3, adminOnly: true },
