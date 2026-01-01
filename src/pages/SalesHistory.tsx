@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, isWithinInterval, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date-fns';
-import { CalendarIcon, Search, Receipt, Filter, Download, Eye } from 'lucide-react';
+import { CalendarIcon, Search, Receipt, Download, Eye, Printer } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { salesApi } from '@/services/api';
 import type { Sale } from '@/types';
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
+import { ReceiptPrintModal } from '@/components/receipt';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +51,8 @@ export default function SalesHistory() {
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const [printSale, setPrintSale] = useState<Sale | null>(null);
 
   useEffect(() => {
     loadSales();
@@ -170,6 +173,11 @@ export default function SalesHistory() {
   const viewSaleDetails = (sale: Sale) => {
     setSelectedSale(sale);
     setIsDetailOpen(true);
+  };
+
+  const handlePrintReceipt = (sale: Sale) => {
+    setPrintSale(sale);
+    setIsPrintOpen(true);
   };
 
   return (
@@ -400,13 +408,24 @@ export default function SalesHistory() {
                           {formatCurrency(sale.total_amount)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => viewSaleDetails(sale)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => viewSaleDetails(sale)}
+                              title="View details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handlePrintReceipt(sale)}
+                              title="Print receipt"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -489,8 +508,15 @@ export default function SalesHistory() {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 gap-2">
-                  <Receipt className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    setIsDetailOpen(false);
+                    handlePrintReceipt(selectedSale);
+                  }}
+                >
+                  <Printer className="h-4 w-4" />
                   Print Receipt
                 </Button>
                 <Button variant="outline" className="flex-1 gap-2">
@@ -502,6 +528,13 @@ export default function SalesHistory() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Receipt Print Modal */}
+      <ReceiptPrintModal
+        sale={printSale}
+        open={isPrintOpen}
+        onOpenChange={setIsPrintOpen}
+      />
     </AppLayout>
   );
 }
