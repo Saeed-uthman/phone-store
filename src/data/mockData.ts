@@ -212,7 +212,7 @@ export const mockSuppliers: Supplier[] = [
   },
 ];
 
-// Mock Sales
+// Mock Sales - Extended with more historical data
 export const mockSales: Sale[] = [
   {
     id: 1,
@@ -296,6 +296,136 @@ export const mockSales: Sale[] = [
     total_amount: 150000,
     payment_method: 'cash',
     created_at: '2024-01-21T15:30:00Z',
+    created_by: 1,
+  },
+  {
+    id: 5,
+    items: [
+      {
+        product_id: 6,
+        product: mockProducts[5],
+        quantity: 2,
+        unit_price: 65000,
+        total_price: 130000,
+      },
+    ],
+    total_amount: 130000,
+    payment_method: 'transfer',
+    created_at: '2024-01-18T09:15:00Z',
+    created_by: 2,
+  },
+  {
+    id: 6,
+    items: [
+      {
+        product_id: 4,
+        product: mockProducts[3],
+        quantity: 1,
+        imei_id: 19,
+        imei: mockIMEIs[18],
+        unit_price: 110000,
+        total_price: 110000,
+      },
+      {
+        product_id: 8,
+        product: mockProducts[7],
+        quantity: 1,
+        unit_price: 7500,
+        total_price: 7500,
+      },
+      {
+        product_id: 9,
+        product: mockProducts[8],
+        quantity: 1,
+        unit_price: 4000,
+        total_price: 4000,
+      },
+    ],
+    total_amount: 121500,
+    payment_method: 'card',
+    created_at: '2024-01-17T16:45:00Z',
+    created_by: 1,
+  },
+  {
+    id: 7,
+    items: [
+      {
+        product_id: 10,
+        product: mockProducts[9],
+        quantity: 3,
+        unit_price: 5500,
+        total_price: 16500,
+      },
+    ],
+    total_amount: 16500,
+    payment_method: 'cash',
+    created_at: '2024-01-16T11:20:00Z',
+    created_by: 2,
+  },
+  {
+    id: 8,
+    items: [
+      {
+        product_id: 3,
+        product: mockProducts[2],
+        quantity: 1,
+        imei_id: 16,
+        imei: mockIMEIs[15],
+        unit_price: 900000,
+        total_price: 900000,
+      },
+    ],
+    total_amount: 900000,
+    payment_method: 'transfer',
+    created_at: '2024-01-15T14:00:00Z',
+    created_by: 1,
+  },
+  {
+    id: 9,
+    items: [
+      {
+        product_id: 7,
+        product: mockProducts[6],
+        quantity: 2,
+        unit_price: 15000,
+        total_price: 30000,
+      },
+      {
+        product_id: 10,
+        product: mockProducts[9],
+        quantity: 2,
+        unit_price: 5500,
+        total_price: 11000,
+      },
+    ],
+    total_amount: 41000,
+    payment_method: 'card',
+    created_at: '2024-01-14T10:30:00Z',
+    created_by: 2,
+  },
+  {
+    id: 10,
+    items: [
+      {
+        product_id: 5,
+        product: mockProducts[4],
+        quantity: 1,
+        imei_id: 24,
+        imei: mockIMEIs[23],
+        unit_price: 580000,
+        total_price: 580000,
+      },
+      {
+        product_id: 7,
+        product: mockProducts[6],
+        quantity: 1,
+        unit_price: 15000,
+        total_price: 15000,
+      },
+    ],
+    total_amount: 595000,
+    payment_method: 'transfer',
+    created_at: '2024-01-12T13:00:00Z',
     created_by: 1,
   },
 ];
