@@ -1,8 +1,9 @@
 import { useRef } from 'react';
-import { Printer, X } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ThermalReceipt } from './ThermalReceipt';
+import { useStoreSettings } from '@/contexts/StoreSettingsContext';
 import type { Sale } from '@/types';
 
 interface ReceiptPrintModalProps {
@@ -13,7 +14,7 @@ interface ReceiptPrintModalProps {
 
 export function ReceiptPrintModal({ sale, open, onOpenChange }: ReceiptPrintModalProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
-
+  const { settings } = useStoreSettings();
   const handlePrint = () => {
     if (!receiptRef.current || !sale) return;
 
@@ -109,7 +110,14 @@ export function ReceiptPrintModal({ sale, open, onOpenChange }: ReceiptPrintModa
         {/* Receipt Preview */}
         <div className="p-6 bg-muted/30 overflow-auto max-h-[70vh]">
           <div className="mx-auto shadow-lg border rounded-sm bg-white">
-            <ThermalReceipt ref={receiptRef} sale={sale} />
+            <ThermalReceipt
+              ref={receiptRef}
+              sale={sale}
+              storeName={settings.storeName}
+              storeAddress={settings.storeAddress}
+              storePhone={settings.storePhone}
+              receiptFooter={settings.receiptFooter}
+            />
           </div>
         </div>
 

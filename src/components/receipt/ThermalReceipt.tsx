@@ -7,6 +7,7 @@ interface ThermalReceiptProps {
   storeName?: string;
   storeAddress?: string;
   storePhone?: string;
+  receiptFooter?: string;
 }
 
 export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
@@ -16,6 +17,7 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
       storeName = 'PhoneStore',
       storeAddress = '123 Tech Street, Lagos',
       storePhone = '08012345678',
+      receiptFooter = 'Thank you for your purchase!\nGoods sold are not returnable.',
     },
     ref
   ) => {
@@ -189,13 +191,18 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
 
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
-          <div style={{ fontSize: '11px', marginBottom: '4px' }}>Thank you for your purchase!</div>
-          <div style={{ fontSize: '10px', color: '#666' }}>
-            Goods sold are not returnable.
-          </div>
-          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
-            Please keep this receipt.
-          </div>
+          {receiptFooter.split('\n').map((line, index) => (
+            <div
+              key={index}
+              style={{
+                fontSize: index === 0 ? '11px' : '10px',
+                color: index === 0 ? 'inherit' : '#666',
+                marginBottom: '2px',
+              }}
+            >
+              {line}
+            </div>
+          ))}
         </div>
 
         {/* Barcode placeholder */}
