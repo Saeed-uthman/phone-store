@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import type { Sale } from '@/types';
 
 interface ThermalReceiptProps {
-  sale: Sale;
+  sale: Sale & { customerName?: string; customerPhone?: string };
   storeName?: string;
   storeAddress?: string;
   storePhone?: string;
@@ -82,6 +82,30 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
             <span style={{ textTransform: 'uppercase' }}>{sale.payment_method}</span>
           </div>
         </div>
+
+        {/* Customer Info */}
+        {(sale.customerName || sale.customerPhone) && (
+          <>
+            <div style={{ borderTop: '1px dashed #000', margin: '8px 0' }} />
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '11px', marginBottom: '4px' }}>
+                CUSTOMER:
+              </div>
+              {sale.customerName && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Name:</span>
+                  <span>{sale.customerName}</span>
+                </div>
+              )}
+              {sale.customerPhone && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Phone:</span>
+                  <span>{sale.customerPhone}</span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Divider */}
         <div style={{ borderTop: '1px dashed #000', margin: '8px 0' }} />
