@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Smartphone,
   History,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ const navigationItems = [
   { name: 'Suppliers', href: '/suppliers', icon: Users, adminOnly: true },
   { name: 'Stock Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: true },
   { name: 'Reports', href: '/reports', icon: BarChart3, adminOnly: true },
+  { name: 'Store Settings', href: '/settings', icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar() {

@@ -14,7 +14,9 @@ import SalesHistory from "./pages/SalesHistory";
 import Suppliers from "./pages/Suppliers";
 import StockAlerts from "./pages/StockAlerts";
 import Reports from "./pages/Reports";
+import StoreSettings from "./pages/StoreSettings";
 import NotFound from "./pages/NotFound";
+import { StoreSettingsProvider } from "./contexts/StoreSettingsContext";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,7 @@ function AppRoutes() {
       <Route path="/suppliers" element={<ProtectedRoute adminOnly><Suppliers /></ProtectedRoute>} />
       <Route path="/alerts" element={<ProtectedRoute adminOnly><StockAlerts /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute adminOnly><Reports /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute adminOnly><StoreSettings /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -82,7 +85,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <StoreSettingsProvider>
+            <AppRoutes />
+          </StoreSettingsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
