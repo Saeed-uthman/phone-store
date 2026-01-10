@@ -54,9 +54,70 @@ This document provides comprehensive guidance for integrating the React frontend
 │                                     └─────────────────────────┘  │
 │                                                                   │
 │  ┌────────────────────────────────────────────────────────────┐  │
-│  │                    PostgreSQL Database                      │  │
+│  │                  MySQL Database (XAMPP)                     │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## XAMPP MySQL Setup
+
+Before setting up Django, you need to configure MySQL in XAMPP:
+
+### 1. Install and Start XAMPP
+
+1. Download XAMPP from [https://www.apachefriends.org/](https://www.apachefriends.org/)
+2. Install XAMPP with MySQL/MariaDB component
+3. Open XAMPP Control Panel
+4. Start **Apache** and **MySQL** services
+
+### 2. Create the Database
+
+1. Open phpMyAdmin: [http://localhost/phpmyadmin](http://localhost/phpmyadmin)
+2. Click **"New"** in the left sidebar
+3. Enter database name: `phonestore_db`
+4. Select collation: `utf8mb4_general_ci`
+5. Click **"Create"**
+
+### 3. Configure MySQL User (Optional but Recommended)
+
+For production, create a dedicated user instead of using root:
+
+```sql
+-- Run in phpMyAdmin SQL tab
+CREATE USER 'phonestore_user'@'localhost' IDENTIFIED BY 'your_secure_password';
+GRANT ALL PRIVILEGES ON phonestore_db.* TO 'phonestore_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 4. Install MySQL Client for Python
+
+**Windows:**
+```bash
+# Option 1: Install mysqlclient (requires Visual C++ Build Tools)
+pip install mysqlclient
+
+# Option 2: Use PyMySQL as alternative (easier installation)
+pip install pymysql
+```
+
+If using PyMySQL, add this to `phonestore_backend/__init__.py`:
+```python
+import pymysql
+pymysql.install_as_MySQLdb()
+```
+
+**Linux/Mac:**
+```bash
+# Ubuntu/Debian
+sudo apt-get install python3-dev default-libmysqlclient-dev build-essential
+pip install mysqlclient
+
+# Mac (with Homebrew)
+brew install mysql-client pkg-config
+export PKG_CONFIG_PATH="/usr/local/opt/mysql-client/lib/pkgconfig"
+pip install mysqlclient
 ```
 
 ---
@@ -72,7 +133,7 @@ source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate   # Windows
 
 # Install dependencies
-pip install django djangorestframework djangorestframework-simplejwt django-cors-headers psycopg2-binary python-decouple
+pip install django djangorestframework djangorestframework-simplejwt django-cors-headers mysqlclient python-decouple
 
 # Create project and app
 django-admin startproject phonestore_backend
@@ -155,17 +216,28 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Database (PostgreSQL recommended for production)
+# Database (MySQL via XAMPP)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'phonestore_db',
-        'USER': 'your_db_user',
-        'PASSWORD': 'your_db_password',
+        'USER': 'root',                    # Default XAMPP MySQL user
+        'PASSWORD': '',                     # Default XAMPP MySQL has no password
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
+
+# Note: Before running migrations, create the database in XAMPP phpMyAdmin:
+# 1. Open http://localhost/phpmyadmin
+# 2. Click "New" to create a new database
+# 3. Enter "phonestore_db" as the database name
+# 4. Select "utf8mb4_general_ci" as the collation
+# 5. Click "Create"
 ```
 
 ---
@@ -1538,7 +1610,8 @@ JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
    - Enable CSRF protection
 
 2. **Database**
-   - Use PostgreSQL in production
+   - Use MySQL via XAMPP for development
+   - For production, consider a managed MySQL service
    - Set up database backups
    - Configure connection pooling
 
@@ -1580,25 +1653,34 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15
+    image: mysql:8.0
     environment:
-      POSTGRES_DB: phonestore_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      MYSQL_DATABASE: phonestore_db
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: phonestore_user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
 
   backend:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/phonestore_db
+      - DB_ENGINE=django.db.backends.mysql
+      - DB_NAME=phonestore_db
+      - DB_USER=phonestore_user
+      - DB_PASSWORD=password
+      - DB_HOST=db
+      - DB_PORT=3306
     depends_on:
       - db
 
 volumes:
-  postgres_data:
+  mysql_data:
 ```
 
 ---
