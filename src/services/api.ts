@@ -22,8 +22,6 @@ import type {
   Product,
   ProductFormData,
   IMEI,
-  Supplier,
-  SupplierFormData,
   Sale,
   SalePayload,
   DashboardStats,
@@ -35,7 +33,6 @@ import {
   mockUsers,
   mockProducts,
   mockIMEIs,
-  mockSuppliers,
   mockSales,
   mockActivities,
   mockDashboardStats,
@@ -47,7 +44,6 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Mutable copies for CRUD operations
 let products = [...mockProducts];
 let imeis = [...mockIMEIs];
-let suppliers = [...mockSuppliers];
 let sales = [...mockSales];
 let activities = [...mockActivities];
 
@@ -369,81 +365,6 @@ export const productsApi = {
   },
 };
 
-// ============================================
-// SUPPLIERS API
-// ============================================
-
-export const suppliersApi = {
-  getAll: async (): Promise<ApiResponse<Supplier[]>> => {
-    await delay(400);
-    return {
-      data: suppliers,
-      success: true,
-    };
-  },
-
-  getById: async (id: number): Promise<ApiResponse<Supplier>> => {
-    await delay(300);
-    const supplier = suppliers.find(s => s.id === id);
-    
-    if (!supplier) {
-      throw new Error('Supplier not found');
-    }
-
-    return {
-      data: supplier,
-      success: true,
-    };
-  },
-
-  create: async (data: SupplierFormData): Promise<ApiResponse<Supplier>> => {
-    await delay(500);
-    const newSupplier: Supplier = {
-      ...data,
-      id: Math.max(...suppliers.map(s => s.id)) + 1,
-      created_at: new Date().toISOString(),
-    };
-    
-    suppliers = [...suppliers, newSupplier];
-    
-    return {
-      data: newSupplier,
-      success: true,
-      message: 'Supplier created successfully',
-    };
-  },
-
-  update: async (id: number, data: Partial<SupplierFormData>): Promise<ApiResponse<Supplier>> => {
-    await delay(400);
-    const index = suppliers.findIndex(s => s.id === id);
-    
-    if (index === -1) {
-      throw new Error('Supplier not found');
-    }
-
-    suppliers[index] = {
-      ...suppliers[index],
-      ...data,
-    };
-
-    return {
-      data: suppliers[index],
-      success: true,
-      message: 'Supplier updated successfully',
-    };
-  },
-
-  delete: async (id: number): Promise<ApiResponse<null>> => {
-    await delay(400);
-    suppliers = suppliers.filter(s => s.id !== id);
-    
-    return {
-      data: null,
-      success: true,
-      message: 'Supplier deleted successfully',
-    };
-  },
-};
 
 // ============================================
 // SALES API

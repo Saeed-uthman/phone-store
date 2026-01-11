@@ -55,22 +55,6 @@ export interface IMEI {
   sold_at?: string;
 }
 
-// Supplier Types
-export interface Supplier {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  address?: string;
-  created_at: string;
-}
-
-export interface SupplierFormData {
-  name: string;
-  phone: string;
-  email: string;
-  address?: string;
-}
 
 // Sales Types
 export interface SaleItem {
