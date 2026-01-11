@@ -1,4 +1,4 @@
-import type { Product, IMEI, Supplier, Sale, Activity, User } from '@/types';
+import type { Product, IMEI, Sale, Activity, User } from '@/types';
 
 // Mock Users
 export const mockUsers: User[] = [
@@ -176,41 +176,6 @@ export const mockIMEIs: IMEI[] = [
   { id: 25, product_id: 5, imei_number: '358673104590877', is_sold: false },
 ];
 
-// Mock Suppliers
-export const mockSuppliers: Supplier[] = [
-  {
-    id: 1,
-    name: 'Tech Distributors Ltd',
-    phone: '08012345678',
-    email: 'info@techdist.com',
-    address: '123 Tech Street, Lagos',
-    created_at: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 2,
-    name: 'Mobile World Inc',
-    phone: '08023456789',
-    email: 'sales@mobileworld.com',
-    address: '456 Mobile Avenue, Abuja',
-    created_at: '2024-01-02T00:00:00Z',
-  },
-  {
-    id: 3,
-    name: 'Phone Galaxy Supplies',
-    phone: '08034567890',
-    email: 'orders@phonegalaxy.com',
-    address: '789 Galaxy Road, Port Harcourt',
-    created_at: '2024-01-03T00:00:00Z',
-  },
-  {
-    id: 4,
-    name: 'Digital Hub Nigeria',
-    phone: '08045678901',
-    email: 'contact@digitalhub.ng',
-    address: '321 Digital Lane, Ibadan',
-    created_at: '2024-01-04T00:00:00Z',
-  },
-];
 
 // Mock Sales - Extended with more historical data
 export const mockSales: Sale[] = [

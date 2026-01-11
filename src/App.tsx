@@ -11,7 +11,6 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import SalesHistory from "./pages/SalesHistory";
-import Suppliers from "./pages/Suppliers";
 import StockAlerts from "./pages/StockAlerts";
 import Reports from "./pages/Reports";
 import StoreSettings from "./pages/StoreSettings";
@@ -69,7 +68,6 @@ function AppRoutes() {
       <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
       <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
       <Route path="/sales-history" element={<ProtectedRoute><SalesHistory /></ProtectedRoute>} />
-      <Route path="/suppliers" element={<ProtectedRoute adminOnly><Suppliers /></ProtectedRoute>} />
       <Route path="/alerts" element={<ProtectedRoute adminOnly><StockAlerts /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute adminOnly><Reports /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute adminOnly><StoreSettings /></ProtectedRoute>} />
