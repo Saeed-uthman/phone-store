@@ -580,9 +580,12 @@ from . import views
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
+    path('signup/', views.SignupView.as_view(), name='signup'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('me/', views.CurrentUserView.as_view(), name='current-user'),
     path('refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot-password'),
+    path('reset-password/', views.ResetPasswordView.as_view(), name='reset-password'),
 ]
 ```
 
@@ -626,9 +629,12 @@ urlpatterns = [
 | Endpoint | Method | Description | Auth Required | Admin Only |
 |----------|--------|-------------|---------------|------------|
 | `/api/auth/login/` | POST | User login | No | No |
+| `/api/auth/signup/` | POST | User registration | No | No |
 | `/api/auth/logout/` | POST | User logout | Yes | No |
 | `/api/auth/me/` | GET | Get current user | Yes | No |
 | `/api/auth/refresh/` | POST | Refresh JWT token | Yes | No |
+| `/api/auth/forgot-password/` | POST | Request password reset email | No | No |
+| `/api/auth/reset-password/` | POST | Reset password with token | No | No |
 | `/api/products/` | GET | List all products | Yes | No |
 | `/api/products/` | POST | Create product | Yes | Yes |
 | `/api/products/<id>/` | GET | Get product details | Yes | No |
@@ -760,6 +766,223 @@ class CurrentUserView(APIView):
         return Response({
             'data': serializer.data,
             'success': True
+        })
+
+
+class SignupView(APIView):
+    """
+    POST /api/auth/signup/
+    
+    Request Body:
+    {
+        "username": "newuser",
+        "email": "newuser@example.com",
+        "password": "securepassword123"
+    }
+    
+    Response:
+    {
+        "data": {
+            "id": 2,
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "role": "SALES_ATTENDANT"
+        },
+        "success": true,
+        "message": "Account created successfully"
+    }
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        # Validation
+        if not username or not email or not password:
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Username, email, and password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(password) < 6:
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Password must be at least 6 characters'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if username exists
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Username already exists'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if email exists
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Email already registered'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            role='SALES_ATTENDANT'  # Default role for new signups
+        )
+        
+        serializer = UserSerializer(user)
+        return Response({
+            'data': serializer.data,
+            'success': True,
+            'message': 'Account created successfully'
+        }, status=status.HTTP_201_CREATED)
+
+
+class ForgotPasswordView(APIView):
+    """
+    POST /api/auth/forgot-password/
+    
+    Request Body:
+    {
+        "email": "user@example.com"
+    }
+    
+    Response:
+    {
+        "data": null,
+        "success": true,
+        "message": "Password reset instructions sent to your email"
+    }
+    
+    Note: For security, always return success even if email doesn't exist
+    to prevent email enumeration attacks.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        from django.contrib.auth import get_user_model
+        from django.core.mail import send_mail
+        from django.conf import settings
+        import secrets
+        
+        User = get_user_model()
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Email is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate reset token
+            reset_token = secrets.token_urlsafe(32)
+            
+            # Store token (you should create a PasswordResetToken model)
+            # PasswordResetToken.objects.create(
+            #     user=user,
+            #     token=reset_token,
+            #     expires_at=timezone.now() + timedelta(hours=24)
+            # )
+            
+            # Send email
+            reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+            send_mail(
+                subject='Password Reset Request - Phone Store',
+                message=f'Click here to reset your password: {reset_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except User.DoesNotExist:
+            # Don't reveal that email doesn't exist
+            pass
+        
+        # Always return success for security
+        return Response({
+            'data': None,
+            'success': True,
+            'message': 'Password reset instructions sent to your email'
+        })
+
+
+class ResetPasswordView(APIView):
+    """
+    POST /api/auth/reset-password/
+    
+    Request Body:
+    {
+        "token": "reset_token_from_email",
+        "new_password": "newsecurepassword123"
+    }
+    
+    Response:
+    {
+        "data": null,
+        "success": true,
+        "message": "Password reset successfully"
+    }
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        token = request.data.get('token')
+        new_password = request.data.get('new_password')
+        
+        if not token or not new_password:
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Token and new password are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 6:
+            return Response({
+                'data': None,
+                'success': False,
+                'message': 'Password must be at least 6 characters'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate token (you should implement PasswordResetToken model)
+        # try:
+        #     reset_token = PasswordResetToken.objects.get(
+        #         token=token,
+        #         expires_at__gt=timezone.now(),
+        #         is_used=False
+        #     )
+        #     user = reset_token.user
+        #     user.set_password(new_password)
+        #     user.save()
+        #     reset_token.is_used = True
+        #     reset_token.save()
+        # except PasswordResetToken.DoesNotExist:
+        #     return Response({
+        #         'data': None,
+        #         'success': False,
+        #         'message': 'Invalid or expired reset token'
+        #     }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({
+            'data': None,
+            'success': True,
+            'message': 'Password reset successfully'
         })
 ```
 
