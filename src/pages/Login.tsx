@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { authApi } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Smartphone, Loader2, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AuthMode = 'login' | 'signup' | 'forgot-password';
 
@@ -53,12 +53,22 @@ export default function LoginPage() {
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     if (!username || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
@@ -72,30 +82,62 @@ export default function LoginPage() {
       return;
     }
 
-    // Simulate signup - replace with actual API call
-    toast({
-      title: 'Account Created!',
-      description: 'Your account has been created. Please log in.',
-    });
-    setMode('login');
-    resetForm();
+    setIsSubmitting(true);
+
+    try {
+      // TODO: This calls the mock API - will be connected to Django backend later
+      // Django endpoint: POST /api/auth/signup/
+      await authApi.signup({ username, email, password });
+      
+      toast({
+        title: 'Account Created!',
+        description: 'Your account has been created. Please log in.',
+      });
+      setMode('login');
+      resetForm();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     if (!email) {
       setError('Please enter your email address');
       return;
     }
 
-    // Simulate password reset - replace with actual API call
-    setSuccessMessage('Password reset instructions have been sent to your email.');
-    toast({
-      title: 'Email Sent!',
-      description: 'Check your inbox for password reset instructions.',
-    });
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // TODO: This calls the mock API - will be connected to Django backend later
+      // Django endpoint: POST /api/auth/forgot-password/
+      const response = await authApi.forgotPassword(email);
+      
+      setSuccessMessage(response.message || 'Password reset instructions have been sent to your email.');
+      toast({
+        title: 'Email Sent!',
+        description: 'Check your inbox for password reset instructions.',
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send reset email. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderLoginForm = () => (
@@ -242,9 +284,9 @@ export default function LoginPage() {
       <Button
         type="submit"
         className="w-full btn-gradient"
-        disabled={isLoading}
+        disabled={isLoading || isSubmitting}
       >
-        {isLoading ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Creating account...
@@ -303,9 +345,9 @@ export default function LoginPage() {
       <Button
         type="submit"
         className="w-full btn-gradient"
-        disabled={isLoading}
+        disabled={isLoading || isSubmitting}
       >
-        {isLoading ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Sending...

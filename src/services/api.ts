@@ -55,6 +55,18 @@ let activities = [...mockActivities];
 // AUTH API
 // ============================================
 
+// Signup credentials type
+export interface SignupCredentials {
+  username: string;
+  email: string;
+  password: string;
+}
+
+// Forgot password type
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<ApiResponse<User>> => {
     await delay(800);
@@ -71,6 +83,167 @@ export const authApi = {
       data: user,
       success: true,
       message: 'Login successful',
+    };
+  },
+
+  /**
+   * Sign up a new user
+   * 
+   * Django Endpoint: POST /api/auth/signup/
+   * 
+   * Request Body:
+   * {
+   *   "username": "string",
+   *   "email": "string",
+   *   "password": "string"
+   * }
+   * 
+   * Response:
+   * {
+   *   "data": { "id": 1, "username": "...", "email": "...", "role": "SALES_ATTENDANT" },
+   *   "success": true,
+   *   "message": "Account created successfully"
+   * }
+   * 
+   * TODO: Replace mock implementation with actual API call:
+   * 
+   * const response = await fetch(`${API_BASE_URL}/api/auth/signup/`, {
+   *   method: 'POST',
+   *   headers: { 'Content-Type': 'application/json' },
+   *   body: JSON.stringify(credentials),
+   * });
+   * 
+   * if (!response.ok) {
+   *   const errorData = await response.json();
+   *   throw new Error(errorData.message || 'Signup failed');
+   * }
+   * 
+   * return await response.json();
+   */
+  signup: async (credentials: SignupCredentials): Promise<ApiResponse<User>> => {
+    await delay(800);
+    
+    // Mock: Check if username already exists
+    const existingUser = mockUsers.find(u => u.username === credentials.username);
+    if (existingUser) {
+      throw new Error('Username already exists');
+    }
+
+    // Mock: Check if email already exists
+    const existingEmail = mockUsers.find(u => u.email === credentials.email);
+    if (existingEmail) {
+      throw new Error('Email already registered');
+    }
+
+    // Mock: Create new user (in real app, this would be handled by Django)
+    const newUser: User = {
+      id: mockUsers.length + 1,
+      username: credentials.username,
+      email: credentials.email,
+      role: 'SALES_ATTENDANT', // Default role for new signups
+      token: `mock_token_${Date.now()}`,
+    };
+
+    return {
+      data: newUser,
+      success: true,
+      message: 'Account created successfully',
+    };
+  },
+
+  /**
+   * Request password reset email
+   * 
+   * Django Endpoint: POST /api/auth/forgot-password/
+   * 
+   * Request Body:
+   * {
+   *   "email": "string"
+   * }
+   * 
+   * Response:
+   * {
+   *   "success": true,
+   *   "message": "Password reset instructions sent to your email"
+   * }
+   * 
+   * TODO: Replace mock implementation with actual API call:
+   * 
+   * const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password/`, {
+   *   method: 'POST',
+   *   headers: { 'Content-Type': 'application/json' },
+   *   body: JSON.stringify({ email }),
+   * });
+   * 
+   * if (!response.ok) {
+   *   const errorData = await response.json();
+   *   throw new Error(errorData.message || 'Failed to send reset email');
+   * }
+   * 
+   * return await response.json();
+   */
+  forgotPassword: async (email: string): Promise<ApiResponse<null>> => {
+    await delay(800);
+    
+    // Mock: In a real app, Django would send an email
+    // For security, always return success even if email doesn't exist
+    // This prevents email enumeration attacks
+    
+    console.log(`[MOCK] Password reset email would be sent to: ${email}`);
+
+    return {
+      data: null,
+      success: true,
+      message: 'Password reset instructions sent to your email',
+    };
+  },
+
+  /**
+   * Reset password with token
+   * 
+   * Django Endpoint: POST /api/auth/reset-password/
+   * 
+   * Request Body:
+   * {
+   *   "token": "string",
+   *   "new_password": "string"
+   * }
+   * 
+   * Response:
+   * {
+   *   "success": true,
+   *   "message": "Password reset successfully"
+   * }
+   * 
+   * TODO: Replace mock implementation with actual API call:
+   * 
+   * const response = await fetch(`${API_BASE_URL}/api/auth/reset-password/`, {
+   *   method: 'POST',
+   *   headers: { 'Content-Type': 'application/json' },
+   *   body: JSON.stringify({ token, new_password: newPassword }),
+   * });
+   * 
+   * if (!response.ok) {
+   *   const errorData = await response.json();
+   *   throw new Error(errorData.message || 'Failed to reset password');
+   * }
+   * 
+   * return await response.json();
+   */
+  resetPassword: async (token: string, newPassword: string): Promise<ApiResponse<null>> => {
+    await delay(800);
+    
+    // Mock: Validate token and reset password
+    if (!token || token.length < 10) {
+      throw new Error('Invalid or expired reset token');
+    }
+
+    console.log(`[MOCK] Password would be reset for token: ${token}`);
+
+    return {
+      data: null,
+      success: true,
+      message: 'Password reset successfully',
     };
   },
 
