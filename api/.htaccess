@@ -1,0 +1,30 @@
+# Enable URL Rewriting
+RewriteEngine On
+
+# Set base directory
+RewriteBase /api/
+
+# Handle Authorization Header
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# Redirect to index.php for clean URLs (optional)
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php/$1 [L]
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Set PHP settings
+php_flag display_errors Off
+php_value max_execution_time 300
+php_value memory_limit 256M
+php_value post_max_size 50M
+php_value upload_max_filesize 50M
