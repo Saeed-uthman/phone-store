@@ -1,4 +1,12 @@
-import type { Product, IMEI, Sale, Activity, User } from '@/types';
+import type {
+  Product,
+  IMEI,
+  Sale,
+  Activity,
+  User,
+  CustomerCartItem,
+  CustomerOrder,
+} from '@/types';
 
 // Mock Users
 export const mockUsers: User[] = [
@@ -448,6 +456,14 @@ export const mockDashboardStats = {
   today_sales: 2,
   today_revenue: 173000,
   inventory_value: mockProducts.reduce((sum, p) => sum + (p.cost_price * p.quantity), 0),
+  expected_profit: mockProducts.reduce((sum, p) => sum + ((p.selling_price - p.cost_price) * p.quantity), 0),
+  profit_earned: mockSales.reduce((sum, sale) => {
+    const costTotal = sale.items.reduce((acc, item) => acc + (item.product.cost_price * item.quantity), 0);
+    return sum + (sale.total_amount - costTotal);
+  }, 0),
   weekly_sales: [45, 62, 38, 71, 55, 48, 65],
   monthly_revenue: 1538000,
 };
+
+export const mockCustomerCart: CustomerCartItem[] = [];
+export const mockCustomerOrders: CustomerOrder[] = [];

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, AlertTriangle, ShoppingCart, DollarSign, TrendingUp, Clock } from 'lucide-react';
-import { dashboardApi } from '@/services/api';
-import type { DashboardStats, Activity } from '@/types';
+import { dashboardApi, getStockAlerts } from '@/services/api';
+import type { DashboardStats, Activity, StockAlertItem } from '@/types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-NG', {
@@ -46,17 +49,20 @@ const activityColors = {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [stockAlerts, setStockAlerts] = useState<StockAlertItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, activityRes] = await Promise.all([
+        const [statsRes, activityRes, alertItems] = await Promise.all([
           dashboardApi.getStats(),
           dashboardApi.getRecentActivity(),
+          getStockAlerts(),
         ]);
         setStats(statsRes.data);
         setActivities(activityRes.data);
+        setStockAlerts(alertItems.slice(0, 5));
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
@@ -78,7 +84,7 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
+            Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <CardContent className="p-6">
                   <Skeleton className="h-4 w-24 mb-2" />
@@ -135,9 +141,41 @@ export default function DashboardPage() {
                 <CardContent className="relative p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Inventory Value</p>
+                      <p className="text-sm font-medium text-muted-foreground">Total Inventory Value</p>
                       <p className="mt-1 text-2xl font-bold text-foreground">
                         {formatCurrency(stats?.inventory_value || 0)}
+                      </p>
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                      <DollarSign className="h-6 w-6 text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="stat-card stat-card-success overflow-hidden">
+                <CardContent className="relative p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Expected Profit</p>
+                      <p className="mt-1 text-2xl font-bold text-foreground">
+                        {formatCurrency(stats?.expected_profit || 0)}
+                      </p>
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+                      <TrendingUp className="h-6 w-6 text-success" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="stat-card stat-card-primary overflow-hidden">
+                <CardContent className="relative p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Profit Earned</p>
+                      <p className="mt-1 text-2xl font-bold text-foreground">
+                        {formatCurrency(stats?.profit_earned || 0)}
                       </p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -241,6 +279,49 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-warning" />
+                Stock Alert Preview
+              </CardTitle>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/alerts">View All Alerts</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : stockAlerts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No low-stock or out-of-stock products right now.</p>
+            ) : (
+              <div className="space-y-3">
+                {stockAlerts.map((alert) => (
+                  <div key={alert.id} className="flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium text-foreground">{alert.product_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Stock: {alert.quantity} | Threshold: {alert.threshold}
+                      </p>
+                    </div>
+                    {alert.status === 'out_of_stock' ? (
+                      <Badge variant="destructive">Out of Stock</Badge>
+                    ) : (
+                      <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

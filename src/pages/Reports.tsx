@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { reportsApi } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   BarChart,
   Bar,
@@ -58,6 +60,7 @@ export default function ReportsPage() {
   const [stockReport, setStockReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activePeriod, setActivePeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [activeTab, setActiveTab] = useState<'sales' | 'inventory'>('sales');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,7 +84,96 @@ export default function ReportsPage() {
   }, [activePeriod]);
 
   const handleExport = () => {
-    toast({ title: 'Export', description: 'Report export would be triggered here' });
+    const doc = new jsPDF();
+    const generatedAt = new Date();
+    const dateTag = generatedAt.toISOString().slice(0, 10);
+
+    doc.setFontSize(16);
+    doc.text('Phone Store Report', 14, 16);
+    doc.setFontSize(11);
+    doc.text(`Generated: ${generatedAt.toLocaleString('en-NG')}`, 14, 24);
+    doc.text(`Report Type: ${activeTab === 'sales' ? 'Sales' : 'Inventory'}`, 14, 30);
+    if (activeTab === 'sales') {
+      doc.text(`Period: ${activePeriod}`, 14, 36);
+    }
+
+    if (activeTab === 'sales') {
+      const salesRows = (salesReport?.top_products || []).map((item: any, index: number) => [
+        String(index + 1),
+        `${item.product.brand} ${item.product.model}`.trim(),
+        String(item.product.category || 'Phone'),
+        String(item.quantity || 0),
+      ]);
+
+      autoTable(doc, {
+        startY: 44,
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Sales', String(salesReport?.total_sales || 0)],
+          ['Total Revenue', formatCurrency(salesReport?.total_revenue || 0)],
+          ['Items Sold', String(salesReport?.items_sold || 0)],
+        ],
+      });
+
+      const nextY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 64;
+      if (salesRows.length === 0) {
+        doc.text('No data available for selected period.', 14, nextY + 12);
+      } else {
+        autoTable(doc, {
+          startY: nextY + 8,
+          head: [['Rank', 'Product', 'Category', 'Units Sold']],
+          body: salesRows,
+        });
+      }
+
+      doc.save(`report-sales-${activePeriod}-${dateTag}.pdf`);
+      toast({ title: 'Export successful', description: 'Sales report PDF downloaded.' });
+      return;
+    }
+
+    const categoryRows = (stockReport?.categories || []).map((cat: any) => [
+      String(cat.category || 'N/A'),
+      String(cat.count || 0),
+      formatCurrency(cat.value || 0),
+    ]);
+
+    autoTable(doc, {
+      startY: 38,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Items', String(stockReport?.total_items || 0)],
+        ['Inventory Value', formatCurrency(stockReport?.total_value || 0)],
+        ['Low Stock Items', String(stockReport?.low_stock_items?.length || 0)],
+      ],
+    });
+
+    const inventoryY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 58;
+    if (categoryRows.length === 0) {
+      doc.text('No data available for selected period.', 14, inventoryY + 12);
+    } else {
+      autoTable(doc, {
+        startY: inventoryY + 8,
+        head: [['Category', 'Products', 'Value']],
+        body: categoryRows,
+      });
+    }
+
+    const lowStockRows = (stockReport?.low_stock_items || []).map((item: any) => [
+      `${item.brand || ''} ${item.model || ''}`.trim(),
+      String(item.quantity || 0),
+      String(item.low_stock_threshold || 0),
+    ]);
+    const lowStockY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? (inventoryY + 10);
+    if (lowStockRows.length > 0) {
+      autoTable(doc, {
+        startY: lowStockY + 8,
+        head: [['Low Stock Product', 'Current Qty', 'Threshold']],
+        body: lowStockRows,
+      });
+    }
+
+    doc.save(`report-inventory-${dateTag}.pdf`);
+    toast({ title: 'Export successful', description: 'Inventory report PDF downloaded.' });
   };
 
   const categoryChartData = stockReport?.categories?.map((cat: any, index: number) => ({
@@ -106,7 +198,7 @@ export default function ReportsPage() {
         </Button>
       }
     >
-      <Tabs defaultValue="sales" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'sales' | 'inventory')} className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="sales">Sales Reports</TabsTrigger>
           <TabsTrigger value="inventory">Inventory Reports</TabsTrigger>

@@ -4,15 +4,18 @@ require_once '../config/database.php';
 require_once '../config/jwt.php';
 require_once '../models/Product.php';
 
-// Require authentication
-$auth = requireAuth();
-
 // Initialize database and model
 $database = new Database();
 $db = $database->getConnection();
 $product = new Product($db);
 
 $method = $_SERVER['REQUEST_METHOD'];
+$auth = null;
+
+// Public read access for customer browsing.
+if ($method !== 'GET') {
+    $auth = requireAuth();
+}
 
 switch ($method) {
     case 'GET':

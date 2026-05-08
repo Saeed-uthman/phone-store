@@ -56,6 +56,15 @@ switch ($method) {
         $data['customer_name'] = $data['customer_name'] ?? 'Walk-in Customer';
         $data['customer_phone'] = $data['customer_phone'] ?? '';
         $data['customer_email'] = $data['customer_email'] ?? '';
+        if ($data['payment_method'] === 'transfer') {
+            $data['payment_method'] = 'bank_transfer';
+        }
+        if (!isset($data['tax'])) {
+            $data['tax'] = 0;
+        }
+        if (!isset($data['discount'])) {
+            $data['discount'] = 0;
+        }
         
         $result = $sale->create($data, $data['items'], $auth['user_id']);
         

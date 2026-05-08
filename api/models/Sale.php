@@ -8,6 +8,33 @@ class Sale {
         $this->conn = $db;
     }
 
+    private function resolveUnitPrice($item) {
+        if (isset($item['price']) && is_numeric($item['price'])) {
+            return (float)$item['price'];
+        }
+
+        if (isset($item['unit_price']) && is_numeric($item['unit_price'])) {
+            return (float)$item['unit_price'];
+        }
+
+        if (isset($item['total_price']) && is_numeric($item['total_price']) && isset($item['quantity']) && (int)$item['quantity'] > 0) {
+            return (float)$item['total_price'] / (int)$item['quantity'];
+        }
+
+        if (isset($item['product_id'])) {
+            $price_query = "SELECT price FROM products WHERE id = :product_id LIMIT 1";
+            $price_stmt = $this->conn->prepare($price_query);
+            $price_stmt->bindParam(":product_id", $item['product_id']);
+            $price_stmt->execute();
+            $product_price = $price_stmt->fetchColumn();
+            if ($product_price !== false) {
+                return (float)$product_price;
+            }
+        }
+
+        return 0.0;
+    }
+
     // Get all sales with filters
     public function getAll($start_date = "", $end_date = "", $status = "") {
         $query = "SELECT s.*, u.username as cashier_name 
@@ -70,7 +97,8 @@ class Sale {
 
     // Get sale items
     private function getSaleItems($sale_id) {
-        $query = "SELECT si.*, p.name as product_name, p.brand, p.model 
+        $query = "SELECT si.*, p.name as product_name, p.brand, p.model, p.category, p.cost_price,
+                         p.stock_quantity, p.min_stock_level, p.created_at AS product_created_at, p.updated_at AS product_updated_at
                   FROM " . $this->items_table . " si 
                   LEFT JOIN products p ON si.product_id = p.id 
                   WHERE si.sale_id = :sale_id";
@@ -91,7 +119,8 @@ class Sale {
             // Calculate totals
             $subtotal = 0;
             foreach ($items as $item) {
-                $subtotal += $item['price'] * $item['quantity'];
+                $unit_price = $this->resolveUnitPrice($item);
+                $subtotal += $unit_price * (int)$item['quantity'];
             }
             $discount = isset($data['discount']) ? $data['discount'] : 0;
             $tax = isset($data['tax']) ? $data['tax'] : ($subtotal * 0.1); // 10% default tax
@@ -129,12 +158,13 @@ class Sale {
                               VALUES (:sale_id, :product_id, :quantity, :price, :total)";
                 $item_stmt = $this->conn->prepare($item_query);
                 
-                $item_total = $item['price'] * $item['quantity'];
+                $unit_price = $this->resolveUnitPrice($item);
+                $item_total = $unit_price * (int)$item['quantity'];
                 
                 $item_stmt->bindParam(":sale_id", $sale_id);
                 $item_stmt->bindParam(":product_id", $item['product_id']);
                 $item_stmt->bindParam(":quantity", $item['quantity']);
-                $item_stmt->bindParam(":price", $item['price']);
+                $item_stmt->bindParam(":price", $unit_price);
                 $item_stmt->bindParam(":total", $item_total);
                 $item_stmt->execute();
 

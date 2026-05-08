@@ -49,7 +49,13 @@ export default function LoginPage() {
       });
       navigate('/dashboard');
     } catch (err) {
-      setError('Invalid username or password');
+      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: 'Login Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -98,6 +104,11 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Signup failed. Please try again.';
       setError(errorMessage);
+      toast({
+        title: 'Signup Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -135,6 +146,11 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send reset email. Please try again.';
       setError(errorMessage);
+      toast({
+        title: 'Request Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -210,13 +226,6 @@ export default function LoginPage() {
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg bg-muted p-4 text-sm">
-        <p className="font-medium text-foreground mb-2">Demo Credentials:</p>
-        <div className="space-y-1 text-muted-foreground">
-          <p><span className="font-medium">Admin:</span> admin / password123</p>
-          <p><span className="font-medium">Sales:</span> sales / password123</p>
-        </div>
-      </div>
     </form>
   );
 
@@ -391,7 +400,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen bg-background p-4">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
       <div className="absolute inset-0" style={{
@@ -399,20 +408,51 @@ export default function LoginPage() {
         backgroundSize: '40px 40px',
       }} />
 
-      <Card className="relative w-full max-w-md shadow-card animate-fade-in">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-            <Smartphone className="h-8 w-8 text-primary-foreground" />
+      <div className="relative mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-6xl items-center">
+        <Card className="w-full overflow-hidden shadow-card animate-fade-in">
+          <div className="grid md:grid-cols-2">
+            <div className="relative hidden md:flex">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent" />
+              <img
+                src="/placeholder.svg"
+                alt="Phone inventory system preview"
+                className="absolute inset-0 h-full w-full object-cover opacity-20"
+              />
+              <div className="relative z-10 flex h-full flex-col justify-between p-8 text-primary-foreground">
+                <div>
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-foreground/20">
+                    <Smartphone className="h-8 w-8" />
+                  </div>
+                  <h2 className="text-3xl font-bold">PhoneStore IMS</h2>
+                  <p className="mt-3 text-sm leading-relaxed text-primary-foreground/90">
+                    Manage stock, track sales, monitor low inventory alerts, and keep your store operations organized.
+                  </p>
+                </div>
+                <div className="space-y-2 text-sm text-primary-foreground/90">
+                  <p>- Inventory and pricing control</p>
+                  <p>- Fast sales processing</p>
+                  <p>- Admin and staff role access</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-8">
+              <CardHeader className="px-0 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary md:hidden">
+                  <Smartphone className="h-8 w-8 text-primary-foreground" />
+                </div>
+                <CardTitle className="text-2xl font-bold">{getTitle()}</CardTitle>
+                <CardDescription>{getDescription()}</CardDescription>
+              </CardHeader>
+              <CardContent className="px-0">
+                {mode === 'login' && renderLoginForm()}
+                {mode === 'signup' && renderSignupForm()}
+                {mode === 'forgot-password' && renderForgotPasswordForm()}
+              </CardContent>
+            </div>
           </div>
-          <CardTitle className="text-2xl font-bold">{getTitle()}</CardTitle>
-          <CardDescription>{getDescription()}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {mode === 'login' && renderLoginForm()}
-          {mode === 'signup' && renderSignupForm()}
-          {mode === 'forgot-password' && renderForgotPasswordForm()}
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
