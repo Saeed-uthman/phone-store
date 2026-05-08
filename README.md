@@ -1,73 +1,227 @@
-# Welcome to your Lovable project
+# Phone Store Inventory Management System
 
-## Project info
+A full-stack phone store management platform with:
+- Admin/Staff dashboard for inventory, sales, stock alerts, reporting, and settings
+- Customer shopping flow (products, cart, checkout, receipt)
+- Customer accounts for purchase history and receipt downloads
+- PHP REST-style API + MySQL backend
+- React + TypeScript frontend
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+### Admin/Staff
+- JWT-based login/signup (`/api/auth/*`)
+- Product management (CRUD)
+- POS sales (multi-product)
+- Sales history and receipt printing
+- Dashboard KPIs:
+  - Total inventory value
+  - Expected profit
+  - Profit earned from completed sales
+- Stock alerts with dashboard preview
+- Reports with PDF export (Sales or Inventory active tab only)
 
-There are several ways of editing your application.
+### Customer
+- Product browsing and product details
+- Cart + checkout (guest checkout supported)
+- Paystack payment initialization placeholder
+- E-receipt view + print/download
+- Customer account auth (`/api/customer-auth/*`)
+- Purchase history with receipt download (`/api/customer/orders*`)
+- Legacy guest orders linked by customer email after login
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, TanStack Query
+- PDF: `jspdf`, `jspdf-autotable`
+- Backend: PHP (XAMPP/cPanel friendly), MySQL, custom JWT helper
 
-Changes made via Lovable will be committed automatically to this repo.
+## Project Structure
 
-**Use your preferred IDE**
+```text
+.
+├─ src/                    # React frontend
+│  ├─ pages/               # Admin + customer pages
+│  ├─ services/api.ts      # API integration layer
+│  ├─ contexts/            # Auth providers (admin/staff + customer)
+│  └─ components/          # Shared UI and layouts
+├─ api/                    # PHP API
+│  ├─ auth/                # Admin/staff auth endpoints
+│  ├─ customer-auth/       # Customer auth endpoints
+│  ├─ customer/orders/     # Customer order history + receipt endpoints
+│  ├─ products/            # Product endpoints + stock alerts + IMEI
+│  ├─ sales/               # Sales/POS endpoints
+│  ├─ reports/             # Report endpoints
+│  ├─ dashboard/           # Dashboard summary + activity
+│  ├─ payments/            # Paystack initialize placeholder
+│  ├─ orders/              # Checkout order create/fetch
+│  └─ database/            # SQL schema + extensions + seed
+└─ README.md
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js 18+ and npm
+- PHP 8.0+
+- MySQL 8+ (or MariaDB equivalent)
+- XAMPP/WAMP/LAMP (recommended for local PHP/MySQL)
 
-Follow these steps:
+## Local Setup
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 1) Clone and Install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+git clone <your-repo-url>
+cd shop-inventory-system
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 2) Configure Database Connection
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Update `api/config/database.php` if needed:
+- host
+- db_name
+- username
+- password
+
+Default values are:
+- host: `localhost`
+- db_name: `phone_inventory`
+- username: `root`
+- password: empty
+
+## 3) Create and Seed Database
+
+Run the SQL files in this order:
+1. `api/database/schema.sql`
+2. `api/database/schema_extensions.sql`
+3. `api/database/seed_from_mock_data.sql` (optional sample data import)
+
+Example with XAMPP MySQL (Windows):
+
+```powershell
+& 'C:\xampp\mysql\bin\mysql.exe' -u root -e "source C:/path/to/shop-inventory-system/api/database/schema.sql"
+& 'C:\xampp\mysql\bin\mysql.exe' -u root -D phone_inventory -e "source C:/path/to/shop-inventory-system/api/database/schema_extensions.sql"
+& 'C:\xampp\mysql\bin\mysql.exe' -u root -D phone_inventory -e "source C:/path/to/shop-inventory-system/api/database/seed_from_mock_data.sql"
+```
+
+## 4) Serve API from Apache
+
+Place/serve project so API is available under:
+
+`http://localhost/phone-inventory-api/api`
+
+If your base path differs, update `API_BASE_URL` in `src/services/api.ts`.
+
+## 5) Run Frontend
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Vite runs on:
+- `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Build production frontend:
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## API Endpoints (Current)
 
-## What technologies are used for this project?
+### Admin/Staff Auth
+- `POST /api/auth/login.php`
+- `POST /api/auth/signup.php`
+- `POST /api/auth/forgot-password.php`
 
-This project is built with:
+### Products / Sales / Reports
+- `GET|POST|PUT|DELETE /api/products/index.php`
+- `GET /api/products/low-stock.php`
+- `GET /api/products/imeis.php`
+- `GET|POST /api/sales/index.php`
+- `GET /api/reports/index.php`
+- `GET /api/dashboard/summary.php`
+- `GET /api/dashboard/activity.php`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Customer Checkout / Payments
+- `POST /api/orders/index.php`
+- `GET /api/orders/index.php?receipt_number=...`
+- `POST /api/payments/initialize.php`
 
-## How can I deploy this project?
+### Customer Accounts + History
+- `POST /api/customer-auth/signup.php`
+- `POST /api/customer-auth/login.php`
+- `GET /api/customer-auth/me.php`
+- `GET /api/customer/orders.php`
+- `GET /api/customer/orders/receipt.php?receipt_number=...`
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Auth Model
 
-## Can I connect a custom domain to my Lovable project?
+- Admin/staff and customer accounts are separate.
+- Admin/staff tokens use `/api/auth/*`.
+- Customer tokens use `/api/customer-auth/*`.
+- Customer history/receipt endpoints require a customer JWT.
+- Guest checkout remains enabled.
 
-Yes, you can!
+## Frontend Routes
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Admin/Staff
+- `/login`
+- `/dashboard`
+- `/products`
+- `/sales`
+- `/sales-history`
+- `/alerts`
+- `/reports`
+- `/settings`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Customer
+- `/shop/products`
+- `/shop/products/:id`
+- `/shop/cart`
+- `/shop/checkout`
+- `/shop/receipt/:receiptNumber`
+- `/shop/login`
+- `/shop/signup`
+- `/shop/history`
+
+## Reports PDF Export
+
+Reports page export supports:
+- Active tab only (`Sales` or `Inventory`)
+- Timestamp
+- Current period/filter context
+- KPI summary values
+- Tab-specific tables
+- No-data fallback text in generated PDF
+
+Generated file names:
+- `report-sales-{period}-YYYY-MM-DD.pdf`
+- `report-inventory-YYYY-MM-DD.pdf`
+
+## Security Notes
+
+- Change JWT secret in `api/config/jwt.php` before production.
+- Restrict CORS in `api/config/cors.php` for production domains.
+- Enforce HTTPS in production.
+- Use strong database credentials.
+
+## Troubleshooting
+
+- `Invalid or expired token`
+  - Re-login and ensure the correct auth flow (admin vs customer).
+- API 404/500
+  - Verify Apache path and that `api/` is correctly served.
+  - Check PHP/Apache logs.
+- Database errors
+  - Re-run SQL files in the documented order.
+  - Confirm `phone_inventory` exists and credentials are correct.
+- Frontend can’t reach backend
+  - Confirm `API_BASE_URL` in `src/services/api.ts`.
+
+## License
+
+This project is for academic/final-year and internal business use unless otherwise specified by the repository owner.
+
+developed by saidu usman abullahi
